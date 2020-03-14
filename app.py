@@ -23,17 +23,16 @@ class GetNovelFromBiquge(Resource):
 
     def get(self):
         arg = parser.parse_args()
-        if "count" in arg:
-            count = arg.get("count")
-        else:
+
+        count = arg.get("count")
+        novelType = arg.get("type")
+        start = arg.get("start")
+
+        if count is None:
             count = 0
-        if "type" in arg:
-            novelType = arg.get("type")
-        else:
+        if novelType is None:
             novelType = -1
-        if "start" in arg:
-            start = arg.get("start")
-        else:
+        if start is None:
             start = 0
 
         resData = {"count": count, "start": start, "type": novelType}
