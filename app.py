@@ -16,6 +16,7 @@ api = Api(app)
 
 parser = reqparse.RequestParser()
 parser.add_argument("count", type=int, required=False)
+parser.add_argument("type", type=int, required=False)
 
 class GetNovelFromBiquge(Resource):
 
@@ -25,9 +26,13 @@ class GetNovelFromBiquge(Resource):
             count = arg.get("count")
         else:
             count = 0
+        if "type" in arg:
+            novelType = arg.get("type")
+        else:
+            novelType = -1
 
         resData = {"count": count, "start": 0}
-        resData["books"] = getNovelListFromBiquge(count)
+        resData["books"] = getNovelListFromBiquge(novelType, count)
         return jsonify(resData)
 
 api.add_resource(GetNovelFromBiquge, "/novel/biquge/")

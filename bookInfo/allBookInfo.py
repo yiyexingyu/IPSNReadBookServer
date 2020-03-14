@@ -45,7 +45,7 @@ def getNovelListByOriginName(originName: str):
     }
 
 
-def getNovelListFromBiquge(novelCount: int = 0) -> list:
+def getNovelListFromBiquge(novelType=-1, novelCount: int = 0) -> list:
     url = "http://www.xbiquge.la/xiaoshuodaquan/"
 
     # 向服务器发送请求，并获取返回的html页面
@@ -61,13 +61,26 @@ def getNovelListFromBiquge(novelCount: int = 0) -> list:
     novelTyped = novelHtmlList.xpath("//*[@id='main']/div[@class='novellist']")
     novelId = 0
 
-    for i in range(len(novelTags)):
+    novels = {}
+    if 0 <= novelType < len(novelTags):
+        # novelTag = re.findall("(.*?)小说", novelTags[novelType].replace('、', ''))
+        novelLinks = novelTyped[novelType].xpath("./ul/li/a/@href")
+        novels[novelType] = novelLinks
+    else:
+        for i in range(len(novelTags)):
+            # novelTag = re.findall("(.*?)小说", novelTags[i].replace('、', ''))
+            novelLinks = novelTyped[i].xpath("./ul/li/a/@href")
+            novels[i] = novelLinks
+
+
+    for i in novels:
         novelTag = re.findall("(.*?)小说", novelTags[i].replace('、', ''))
-        novelLinks = novelTyped[i].xpath("./ul/li/a/@href")
+        novelLinks = novels[i]
 
         # 爬取每一本小说的详细信息
         for novelLink in novelLinks:
             # st = time.time()
+
             infoHtml = requests.get(novelLink)
             # print("请求小说详细页面：", time.time() - st, "s")
 
