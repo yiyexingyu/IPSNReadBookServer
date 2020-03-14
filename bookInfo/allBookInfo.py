@@ -45,12 +45,12 @@ def getNovelListByOriginName(originName: str):
     }
 
 
-def getNovelListFromBiquge(novelCount: int = 0) -> dict:
+def getNovelListFromBiquge(novelCount: int = 0) -> list:
     url = "http://www.xbiquge.la/xiaoshuodaquan/"
 
     # 向服务器发送请求，并获取返回的html页面
     html = requests.get(url)
-    novelInfoList = {}
+    novelInfoList = []
 
     novelHtmlList = etree.HTML(html.text)
 
@@ -76,7 +76,7 @@ def getNovelListFromBiquge(novelCount: int = 0) -> dict:
             novelInfo["update"] = novelInfoHtml.xpath("//*[@id='info']/p[3]/text()")[0].split("：")[-1]
             novelInfo["cover"] = novelInfoHtml.xpath("//*[@id='fmimg']/img/@src")[0]
 
-            novelInfoList[novelId] = novelInfo
+            novelInfoList.append(novelInfo)
             novelId += 1
 
             if novelCount > 0 and novelId >= novelCount:
