@@ -15,8 +15,9 @@ app.config["JSON_AS_ASCII"]=False
 api = Api(app)
 
 parser = reqparse.RequestParser()
-parser.add_argument("count", type=int, required=False)
 parser.add_argument("type", type=int, required=False)
+parser.add_argument("start", type=int, required=False)
+parser.add_argument("count", type=int, required=False)
 
 class GetNovelFromBiquge(Resource):
 
@@ -30,9 +31,13 @@ class GetNovelFromBiquge(Resource):
             novelType = arg.get("type")
         else:
             novelType = -1
+        if "start" in arg:
+            start = arg.get("start")
+        else:
+            start = 0
 
-        resData = {"count": count, "start": 0}
-        resData["books"] = getNovelListFromBiquge(novelType, count)
+        resData = {"count": count, "start": start, "type": novelType}
+        resData["books"] = getNovelListFromBiquge(novelType, start, count)
         return jsonify(resData)
 
 api.add_resource(GetNovelFromBiquge, "/novel/biquge/")

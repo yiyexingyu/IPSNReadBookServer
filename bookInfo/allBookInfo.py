@@ -45,7 +45,7 @@ def getNovelListByOriginName(originName: str):
     }
 
 
-def getNovelListFromBiquge(novelType=-1, novelCount: int = 0) -> list:
+def getNovelListFromBiquge(novelType=-1, start = 0, novelCount: int = 0) -> list:
     url = "http://www.xbiquge.la/xiaoshuodaquan/"
 
     # 向服务器发送请求，并获取返回的html页面
@@ -78,9 +78,9 @@ def getNovelListFromBiquge(novelType=-1, novelCount: int = 0) -> list:
         novelLinks = novels[i]
 
         # 爬取每一本小说的详细信息
-        for novelLink in novelLinks:
+        for n in range(start, len(novelLinks)):
             # st = time.time()
-
+            novelLink = novelLinks[n]
             infoHtml = requests.get(novelLink)
             # print("请求小说详细页面：", time.time() - st, "s")
 
