@@ -74,7 +74,7 @@ def getNovelListFromBiquge(novelCount: int = 0) -> dict:
             novelInfo["state"] = "完结" # 需要额外处理
             novelInfo["intro"] = novelInfoHtml.xpath("//*[@id='intro']/p[2]/text()")[0].strip()
             novelInfo["update"] = novelInfoHtml.xpath("//*[@id='info']/p[3]/text()")[0].split("：")[-1]
-            novelInfo["cover"] = novelInfoHtml.xpath("//*[@id='fmimg']/img/@src")
+            novelInfo["cover"] = novelInfoHtml.xpath("//*[@id='fmimg']/img/@src")[0]
 
             novelInfoList[novelId] = novelInfo
             novelId += 1
