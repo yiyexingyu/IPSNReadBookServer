@@ -25,7 +25,7 @@ class GetNovelFromBiquge(Resource):
             count = arg.get("count")
         else:
             count = 0
-        
+
         resData = {"count": count, "start": 0}
         resData["books"] = getNovelListFromBiquge(count)
         return jsonify(resData)
@@ -35,7 +35,7 @@ api.add_resource(GetNovelFromBiquge, "/novel/biquge/")
 
 @app.route('/')
 def hello_world():
-    return 'Hello World!'
+    return '欢迎来到我的世界！！！！'
 
 
 if __name__ == '__main__':

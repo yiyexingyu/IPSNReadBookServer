@@ -5,7 +5,7 @@
 # @Email   : h0670131005@gmail.com
 # @Software: PyCharm
 
-
+import time
 import re
 from lxml import etree
 import requests
@@ -49,7 +49,10 @@ def getNovelListFromBiquge(novelCount: int = 0) -> list:
     url = "http://www.xbiquge.la/xiaoshuodaquan/"
 
     # 向服务器发送请求，并获取返回的html页面
+    # st = time.time()
     html = requests.get(url)
+    # print("请求全部小说页面：", time.time() - st, "s")
+
     novelInfoList = []
 
     novelHtmlList = etree.HTML(html.text)
@@ -64,7 +67,10 @@ def getNovelListFromBiquge(novelCount: int = 0) -> list:
 
         # 爬取每一本小说的详细信息
         for novelLink in novelLinks:
+            # st = time.time()
             infoHtml = requests.get(novelLink)
+            # print("请求小说详细页面：", time.time() - st, "s")
+
             infoHtml.encoding = infoHtml.apparent_encoding
             novelInfoHtml = etree.HTML(infoHtml.text)
 
@@ -86,4 +92,6 @@ def getNovelListFromBiquge(novelCount: int = 0) -> list:
 
 
 if __name__ == '__main__':
-    getNovelListFromBiquge()
+    st = time.time()
+    getNovelListFromBiquge(novelCount=10)
+    print("总时间：", time.time() - st, "s")
