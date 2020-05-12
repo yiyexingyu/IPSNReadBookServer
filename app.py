@@ -1,14 +1,7 @@
-# -*- encoding: utf-8 -*-
-# @File    : app.py
-# @Time    : 2020/3/13 23:18
-# @Author  : 一叶星羽
-# @Email   : h0670131005@gmail.com
-# @Software: PyCharm
-
-
 from flask import Flask,jsonify
 from flask_restful import reqparse, Resource, Api
 from bookInfo.allBookInfo import getNovelListFromBiquge
+from bookInfo.mp4Book import getMp3Novel
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"]=False
@@ -18,6 +11,14 @@ parser = reqparse.RequestParser()
 parser.add_argument("type", type=int, required=False)
 parser.add_argument("start", type=int, required=False)
 parser.add_argument("count", type=int, required=False)
+
+
+class GetNovelMp3(Resource):
+    """docstring for GetNovelMp3"""
+
+    def get(self):
+        return jsonify(getMp3Novel())
+
 
 class GetNovelFromBiquge(Resource):
 
@@ -40,6 +41,7 @@ class GetNovelFromBiquge(Resource):
         return jsonify(resData)
 
 api.add_resource(GetNovelFromBiquge, "/novel/biquge/")
+api.add_resource(GetNovelMp3, "/novel/mp3/")
 
 
 @app.route('/')
