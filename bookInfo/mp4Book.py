@@ -6,20 +6,7 @@
 # @Software: PyCharm
 
 import re
-
-from lxml import etree
 import requests
-from urllib import request
-
-import urllib.request
-
-import urllib.parse
-
-import re
-
-import os.path
-
-import selenium.webdriver
 
 
 # <a title="第000章" href="/down/?26-0-0.html" target="_blank">第000章</a>
