@@ -7,6 +7,7 @@
 
 import time
 import re
+
 from lxml import etree
 import requests
 from urllib import request
@@ -45,7 +46,7 @@ def getNovelListByOriginName(originName: str):
     }
 
 
-def getNovelListFromBiquge(novelType=-1, start = 0, novelCount: int = 0) -> list:
+def getNovelListFromBiquge(novelType=-1, start = 0, novelCount: int = 0, process=None) -> list:
     url = "http://www.xbiquge.la/xiaoshuodaquan/"
 
     # 向服务器发送请求，并获取返回的html页面
@@ -87,11 +88,18 @@ def getNovelListFromBiquge(novelType=-1, start = 0, novelCount: int = 0) -> list
             infoHtml.encoding = infoHtml.apparent_encoding
             novelInfoHtml = etree.HTML(infoHtml.text)
 
-            novelInfo = {"tag": novelTag, "link": novelLink}
+            novelInfo = {"tag": ";".join(novelTag), "link": novelLink}
             novelInfo["title"] = novelInfoHtml.xpath("//*[@id='info']/h1/text()")[0]
             novelInfo["author"] = novelInfoHtml.xpath("//*[@id='info']/p[1]/text()")[0].split("：")[-1]
             novelInfo["state"] = "完结" # 需要额外处理
-            novelInfo["intro"] = novelInfoHtml.xpath("//*[@id='intro']/p[2]/text()")[0].strip()
+
+            intro = novelInfoHtml.xpath("//*[@id='intro']/p[2]/text()")
+            if intro and len(intro) > 0:
+                intro = intro[0].strip()
+            else:
+                intro = "无简介，这位作者很懒！！"
+            novelInfo["intro"] = intro
+
             novelInfo["update"] = novelInfoHtml.xpath("//*[@id='info']/p[3]/text()")[0].split("：")[-1]
             novelInfo["cover"] = novelInfoHtml.xpath("//*[@id='fmimg']/img/@src")[0]
 
@@ -99,12 +107,42 @@ def getNovelListFromBiquge(novelType=-1, start = 0, novelCount: int = 0) -> list
             novelId += 1
 
             if novelCount > 0 and novelId >= novelCount:
+                if process is not None:
+                    process(novelInfoList)
                 return novelInfoList
 
+    if process is not None:
+        process(novelInfoList)
     return novelInfoList
 
 
 if __name__ == '__main__':
-    st = time.time()
-    getNovelListFromBiquge(novelCount=10)
-    print("总时间：", time.time() - st, "s")
+    from openpyxl.workbook import Workbook
+
+    def saveDateToExcel(data: [dict]):
+        wb = Workbook()
+
+        ws = wb.worksheets[0]
+        ws.title = "novel info"
+
+        # 设置表头
+        headRow = list(data[0].keys())
+        for i in range(1, len(headRow) + 1):
+            ws.cell(1, i, value=headRow[i-1])
+
+        # 设置数据
+        for index in range(0, len(data)):
+            for col in range(0, len(headRow)):
+                ws.cell(row=index+2, column=col+1, value=data[index][headRow[col]])
+
+        wb.save("navelInfo.xls")
+
+
+    novelInfo = []
+    try:
+        for i in range(0, 6):
+                novelInfo.extend(getNovelListFromBiquge(novelType=i, novelCount=20, start=0))
+    except Exception as e:
+        print(e)
+    finally:
+        saveDateToExcel(novelInfo)
