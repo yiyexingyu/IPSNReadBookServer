@@ -1,7 +1,7 @@
 from flask import Flask,jsonify
 from flask_restful import reqparse, Resource, Api
 from bookInfo.allBookInfo import getNovelListFromBiquge
-from bookInfo.mp4Book import getMp3Novel
+from bookInfo.mp4Book import getMp3Novel, searchNovel
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"]=False
@@ -11,6 +11,7 @@ parser = reqparse.RequestParser()
 parser.add_argument("type", type=int, required=False)
 parser.add_argument("start", type=int, required=False)
 parser.add_argument("count", type=int, required=False)
+parser.add_argument("searchword", type=str, required=True)
 
 
 class GetNovelMp3(Resource):
@@ -18,6 +19,16 @@ class GetNovelMp3(Resource):
 
     def get(self):
         return jsonify(getMp3Novel())
+
+
+class SearchNovelMp3(Resource):
+    """docstring for GetNovelMp3"""
+
+    def get(self):
+        arg = parser.parse_args()
+        searchWord = arg.get("searchword")
+        print("\n\nsearchword: ", searchWord, "\n\n")
+        return jsonify(searchNovel(searchWord))
 
 
 class GetNovelFromBiquge(Resource):
@@ -41,7 +52,7 @@ class GetNovelFromBiquge(Resource):
         return jsonify(resData)
 
 api.add_resource(GetNovelFromBiquge, "/novel/biquge/")
-api.add_resource(GetNovelMp3, "/novel/mp3/")
+api.add_resource(SearchNovelMp3, "/novel/mp3/")
 
 
 @app.route('/')

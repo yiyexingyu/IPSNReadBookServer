@@ -7,29 +7,44 @@
 
 import requests
 import re
+from lxml import etree
 from bs4 import BeautifulSoup
 
 
 def searchNovel(novelInfo):
+    novelInfo = str(novelInfo.encode("gb2312")).replace("\\", "|").split("'")[1].replace("|x", "%")
     url = "https://m.tingshubao.com/search.asp?searchword=" + novelInfo
     header = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36",
-    }
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36", }
 
     response = requests.get(url, headers=header)
     response.encoding = "gb2312"
-
     soup = BeautifulSoup(response.text)
     print(soup.prettify())
+
+    html = etree.HTML(response.text)
+    novelNum = int(html.xpath("/html/body/div[2]/div/span/em")[0].text)
+    result = {"novelNum": novelNum}
+
+    if novelNum == 0:
+        return result
+
+    novelList = html.xpath("/html/body/div[2]/ul/li[@class='book-li']")
+    for index, novelHtmlInfo in enumerate(novelList):  # type: etree._Element
+        result[str(index)] =  {
+            "novelLink": "https://m.tingshubao.com/" + novelHtmlInfo.xpath("./a/@href")[0],
+            "novelCover": "https:" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
+            "novelTitle": novelHtmlInfo.xpath("./a/div/h4/text()")[0],
+            "novelDesc": novelHtmlInfo.xpath("./a/div/p/text()")[0],
+            "novelAuthor": novelHtmlInfo.xpath("./a/div/div[@class='book-meta']/text()")[0],
+        }
+    return result
 
 
 def downloadNovel(url):
     response = requests.get(url)
     response.encoding = "gb2312"
     html = response.text
-
-    soup = BeautifulSoup(html)
-    print(soup.prettify())
 
 
 def getMp3Novel():
@@ -66,6 +81,6 @@ def getMp3Novel():
 
 
 if __name__ == '__main__':
-    getMp3Novel()
-    # searchNovel("牧神记")
+    # getMp3Novel()
+    searchNovel("大主宰")
     # downloadNovel("https://m.tingshubao.com/book/2940.html")
