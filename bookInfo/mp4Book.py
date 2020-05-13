@@ -34,6 +34,9 @@ def downloadNovel(url):
 
 def getMp3Novel():
     response = requests.get("https://m.tingshubao.com/video/?2940-0-2.html")
+    print(str(response.content, encoding="utf-8"))
+    print(response.text)
+
     response.encoding = "gb2312"
     html = response.text
 
@@ -63,6 +66,6 @@ def getMp3Novel():
 
 
 if __name__ == '__main__':
-    # getMp3Novel()
-    searchNovel("%BE%B2%D2%B9%BC%C4%CB%BC")
+    getMp3Novel()
+    # searchNovel("牧神记")
     # downloadNovel("https://m.tingshubao.com/book/2940.html")

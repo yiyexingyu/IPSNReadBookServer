@@ -1,11 +1,3 @@
-# -*- encoding: utf-8 -*-
-# @File    : app.py
-# @Time    : 2020/3/13 23:18
-# @Author  : 一叶星羽
-# @Email   : h0670131005@gmail.com
-# @Software: PyCharm
-
-
 from flask import Flask,jsonify
 from flask_restful import reqparse, Resource, Api
 from bookInfo.allBookInfo import getNovelListFromBiquge
