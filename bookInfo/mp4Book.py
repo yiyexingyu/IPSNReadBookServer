@@ -31,7 +31,7 @@ def searchNovel(novelInfo):
     novelInfoList = []
     for index, novelHtmlInfo in enumerate(novelList):  # type: etree._Element
         novelInfoList.append({
-            "novelLink": novelHtmlInfo.xpath("./a/@href")[0].split("/")[-1].split(".")[0],
+            "novelID": int(novelHtmlInfo.xpath("./a/@href")[0].split("/")[-1].split(".")[0]),
             "novelCover": "https:" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
             "novelTitle": novelHtmlInfo.xpath("./a/div/h4/text()")[0],
             "novelDesc": novelHtmlInfo.xpath("./a/div/p/text()")[0],
