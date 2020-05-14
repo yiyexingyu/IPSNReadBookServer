@@ -28,14 +28,16 @@ def searchNovel(novelInfo):
         return result
 
     novelList = html.xpath("/html/body/div[2]/ul/li[@class='book-li']")
+    novelInfoList = []
     for index, novelHtmlInfo in enumerate(novelList):  # type: etree._Element
-        result[str(index)] = {
+        novelInfoList.append({
             "novelLink": "https://m.tingshubao.com/" + novelHtmlInfo.xpath("./a/@href")[0],
             "novelCover": "https:" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
             "novelTitle": novelHtmlInfo.xpath("./a/div/h4/text()")[0],
             "novelDesc": novelHtmlInfo.xpath("./a/div/p/text()")[0],
             "novelAuthor": novelHtmlInfo.xpath("./a/div/div[@class='book-meta']/text()")[0],
-        }
+        })
+    result["novelList"] = novelInfoList
     return result
 
 
