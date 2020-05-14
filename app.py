@@ -1,7 +1,7 @@
 from flask import Flask,jsonify
 from flask_restful import reqparse, Resource, Api
 from bookInfo.allBookInfo import getNovelListFromBiquge
-from bookInfo.mp4Book import getMp3Novel, searchNovel
+from bookInfo.mp4Book import getMp3Novel, searchNovel, getNovelChapterList
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"]=False
@@ -11,14 +11,17 @@ parser = reqparse.RequestParser()
 parser.add_argument("type", type=int, required=False)
 parser.add_argument("start", type=int, required=False)
 parser.add_argument("count", type=int, required=False)
-parser.add_argument("searchword", type=str, required=True)
+parser.add_argument("searchword", type=str, required=False)
+parser.add_argument("bookId", type=int, required=False)
 
 
-class GetNovelMp3(Resource):
+class GetNovelMp3Chapter(Resource):
     """docstring for GetNovelMp3"""
 
     def get(self):
-        return jsonify(getMp3Novel())
+        bookId = parser.parse_args().get("bookId")
+        url = "https://m.tingshubao.com/book/%s.html" % bookId
+        return jsonify(getNovelChapterList(url))
 
 
 class SearchNovelMp3(Resource):
@@ -52,7 +55,8 @@ class GetNovelFromBiquge(Resource):
         return jsonify(resData)
 
 api.add_resource(GetNovelFromBiquge, "/novel/biquge/")
-api.add_resource(SearchNovelMp3, "/novel/mp3/")
+api.add_resource(SearchNovelMp3, "/novel/mp3/search/")
+api.add_resource(GetNovelMp3Chapter, "/novel/mp3/")
 
 
 @app.route('/')

@@ -19,8 +19,6 @@ def searchNovel(novelInfo):
 
     response = requests.get(url, headers=header)
     response.encoding = "gb2312"
-    soup = BeautifulSoup(response.text)
-    print(soup.prettify())
 
     html = etree.HTML(response.text)
     novelNum = int(html.xpath("/html/body/div[2]/div/span/em")[0].text)
@@ -31,13 +29,39 @@ def searchNovel(novelInfo):
 
     novelList = html.xpath("/html/body/div[2]/ul/li[@class='book-li']")
     for index, novelHtmlInfo in enumerate(novelList):  # type: etree._Element
-        result[str(index)] =  {
+        result[str(index)] = {
             "novelLink": "https://m.tingshubao.com/" + novelHtmlInfo.xpath("./a/@href")[0],
             "novelCover": "https:" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
             "novelTitle": novelHtmlInfo.xpath("./a/div/h4/text()")[0],
             "novelDesc": novelHtmlInfo.xpath("./a/div/p/text()")[0],
             "novelAuthor": novelHtmlInfo.xpath("./a/div/div[@class='book-meta']/text()")[0],
         }
+    return result
+
+
+def getNovelChapterList(novelUrl):
+    response = requests.get(novelUrl)
+    response.encoding = "gb2312"
+
+    html = etree.HTML(response.text)
+    novelInfo = html.xpath("/html/body/div[1]/div")[0]
+
+    result = {"novelType": novelInfo.xpath("./div/a/text()")[0]}
+    # result["startRand"] = novelInfo.xpath("")/html/body/div[1]/div
+    statue = novelInfo.xpath("./div[3]/text()")
+    result["updateStatue"] = statue[0]
+    result["updateDate"] = statue[1]
+
+    chapterList = []
+    urlDomain = "https://m.tingshubao.com/"
+    chapterHtmlList = html.xpath("//*[@id='playlist']/ul/li")
+    for chapter in chapterHtmlList:
+        chapterList.append({
+            "url": urlDomain + chapter.xpath("./a/@href")[0],
+            "title": chapter.xpath("./a/text()")[0]
+        })
+    result["chapterList"] = chapterList
+
     return result
 
 
@@ -82,5 +106,6 @@ def getMp3Novel():
 
 if __name__ == '__main__':
     # getMp3Novel()
-    searchNovel("大主宰")
+    # searchNovel("大主宰")
     # downloadNovel("https://m.tingshubao.com/book/2940.html")
+    getNovelChapterList("https://m.tingshubao.com/book/81.html")
