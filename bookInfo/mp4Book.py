@@ -31,7 +31,7 @@ def searchNovel(novelInfo):
     novelInfoList = []
     for index, novelHtmlInfo in enumerate(novelList):  # type: etree._Element
         novelInfoList.append({
-            "novelLink": "https://m.tingshubao.com/" + novelHtmlInfo.xpath("./a/@href")[0],
+            "novelLink": novelHtmlInfo.xpath("./a/@href")[0].split("/")[-1].split(".")[0],
             "novelCover": "https:" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
             "novelTitle": novelHtmlInfo.xpath("./a/div/h4/text()")[0],
             "novelDesc": novelHtmlInfo.xpath("./a/div/p/text()")[0],
@@ -107,7 +107,7 @@ def getMp3Novel():
 
 
 if __name__ == '__main__':
-    # getMp3Novel()
-    # searchNovel("大主宰")
+    print(searchNovel("牧神记"))
+    #     print(e)
     # downloadNovel("https://m.tingshubao.com/book/2940.html")
-    getNovelChapterList("https://m.tingshubao.com/book/81.html")
+    # getNovelChapterList("https://m.tingshubao.com/book/81.html")
