@@ -52,6 +52,7 @@ def getNovelChapterList(novelUrl):
     result["updateStatue"] = statue[0]
     result["updateDate"] = statue[1]
 
+    print("正在获取章节列表....")
     chapterList = []
     urlDomain = "https://m.tingshubao.com/"
     chapterHtmlList = html.xpath("//*[@id='playlist']/ul/li")
@@ -61,7 +62,6 @@ def getNovelChapterList(novelUrl):
             "title": chapter.xpath("./a/text()")[0]
         })
     result["chapterList"] = chapterList
-
     return result
 
 

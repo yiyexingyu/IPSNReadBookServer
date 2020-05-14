@@ -20,7 +20,8 @@ class GetNovelMp3Chapter(Resource):
 
     def get(self):
         bookId = parser.parse_args().get("bookId")
-        url = "https://m.tingshubao.com/book/%s.html" % bookId
+        url = "https://m.tingshubao.com/book/%s.html" % str(bookId)
+        print(url)
         return jsonify(getNovelChapterList(url))
 
 
