@@ -124,7 +124,6 @@ def showMenu(menu, selectRange):
 
 def mp3BookDetail(bookInfoDict: dict):
     path = os.path.join(root, "mp3", bookInfoDict["novelTitle"])
-    print("下载路径：", path)
     menu = """%s--%s""" % (bookInfoDict["novelTitle"], bookInfoDict["novelAuthor"])
 
     url = "https://m.tingshubao.com/book/%s.html" % str(bookInfoDict["novelID"])
@@ -141,7 +140,7 @@ def mp3BookDetail(bookInfoDict: dict):
     6、退出"""
 
     while True:
-        select = showMenu(menu, range(1, 6))
+        select = showMenu(menu, range(1, 7))
         if select == 1:
             chapters = input("请选择集数(多集请用逗号分隔)：")
             try:
@@ -156,8 +155,9 @@ def mp3BookDetail(bookInfoDict: dict):
                     os.makedirs(path)
                 for chapterID in chaptersID:
                     if 1<= chapterID <= chapterNum:
+                        print("开始下载第%d集..." % chapterID)
                         data = downloadMp3Novel(novelDetail["chapterList"][chapterID-1]["url"])
-                        with open(path + "/" + novelDetail["chapterList"][chapterID-1]["title"], "wb") as f:
+                        with open(path + "/" + novelDetail["chapterList"][chapterID-1]["title"] + ".mp3", "wb") as f:
                             f.write(data)
                         print("下载第%d集完成..." % chapterID)
                     else:
