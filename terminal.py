@@ -5,6 +5,12 @@
 # @Email   : h0670131005@gmail.com
 # @Software: PyCharm
 
+import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(BASE_DIR, "BookInfo"))
+
 from TermBook.BookStore import run
 
 

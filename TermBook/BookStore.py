@@ -7,6 +7,11 @@
 
 import sys
 import os
+
+# get current working directory -- Better to set the PYTHONPATH env variable
+# current_working_directory = "C:\Users\username\PycharmProjects\projectName"
+# sys.path.append(current_working_directory)
+
 from BookInfo.mp4Book import searchNovel, getNovelChapterList, downloadMp3Novel
 
 
