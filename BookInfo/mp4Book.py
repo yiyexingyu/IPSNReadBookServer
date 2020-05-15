@@ -67,17 +67,8 @@ def getNovelChapterList(novelUrl):
     return result
 
 
-def downloadNovel(url):
+def downloadMp3Novel(url):
     response = requests.get(url)
-    response.encoding = "gb2312"
-    html = response.text
-
-
-def getMp3Novel():
-    response = requests.get("https://m.tingshubao.com/video/?2940-0-2.html")
-    print(str(response.content, encoding="utf-8"))
-    print(response.text)
-
     response.encoding = "gb2312"
     html = response.text
 
@@ -90,7 +81,6 @@ def getMp3Novel():
     url = (urlData[0] + '/' + urlData[1] + '/play_' + urlData[1] + '_' + urlData[2] + '.htm').strip()
 
     novelUrl = "https://m.tingshubao.com/player/tingchina.php?url=" + url
-    print("url:", novelUrl)
     header = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36"
     }
@@ -101,13 +91,12 @@ def getMp3Novel():
     mp3Url = response.json()['url']
     response = requests.get(mp3Url, headers=header)
 
-    with open(title + ".mp3", "wb") as f:
-        f.write(response.content)
-    return {"title": title, "data": response.content}
+
+    return response.content
 
 
 if __name__ == '__main__':
-    print(searchNovel("牧神记"))
+    # print(searchNovel("牧神记"))
     #     print(e)
-    # downloadNovel("https://m.tingshubao.com/book/2940.html")
-    # getNovelChapterList("https://m.tingshubao.com/book/81.html")
+    downloadMp3Novel("https://m.tingshubao.com//video/?2940-0-0.html")
+    # print(getNovelChapterList("https://m.tingshubao.com/book/81.html"))

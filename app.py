@@ -1,7 +1,7 @@
 from flask import Flask,jsonify
 from flask_restful import reqparse, Resource, Api
-from bookInfo.allBookInfo import getNovelListFromBiquge
-from bookInfo.mp4Book import getMp3Novel, searchNovel, getNovelChapterList
+from BookInfo.allBookInfo import getNovelListFromBiquge
+from BookInfo.mp4Book import downloadMp3Novel, searchNovel, getNovelChapterList
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"]=False
