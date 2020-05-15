@@ -9,6 +9,8 @@ import os
 import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
+sys.path.append(BASE_DIR)
 sys.path.insert(0, os.path.join(BASE_DIR, "BookInfo"))
 
 from TermBook.BookStore import run

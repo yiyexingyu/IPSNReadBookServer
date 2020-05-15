@@ -8,7 +8,6 @@
 import requests
 import re
 from lxml import etree
-from bs4 import BeautifulSoup
 
 
 def searchNovel(novelInfo):
