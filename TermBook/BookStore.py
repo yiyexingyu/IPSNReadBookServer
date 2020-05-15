@@ -98,7 +98,7 @@ def downloadMp3Novel(url):
 
 
 
-root = "../INovel"
+root = "../../INovel"
 
 def showMenu(menu, selectRange):
     tip = str(selectRange.start) + "-" + str(selectRange.stop - 1)
