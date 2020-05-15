@@ -7,10 +7,12 @@
 
 import sys
 import os
+import time
 
 import requests
 import re
 from lxml import etree
+from json.decoder import JSONDecodeError
 
 
 def searchNovel(novelInfo):
@@ -87,15 +89,18 @@ def downloadMp3Novel(url):
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36"
     }
 
-    response = requests.get(novelUrl, headers=header)
-    response.encoding = "gb2312"
+    while True:
+        response = requests.get(novelUrl, headers=header)
+        response.encoding = "gb2312"
 
-    mp3Url = response.json()['url']
-    response = requests.get(mp3Url, headers=header)
-
-
-    return response.content
-
+        try:
+            mp3Url = response.json()['url']
+            response = requests.get(mp3Url, headers=header)
+            return response.content
+        except JSONDecodeError:
+            print("获取音频出现错误: ", mp3Url)
+            print(response.text)
+            time.sleep(2)
 
 
 root = "../../INovel"
@@ -133,16 +138,17 @@ def mp3BookDetail(bookInfoDict: dict):
     menu += ("\n" + "共有%d集(1-%d)" % (chapterNum, chapterNum))
     menu += """
     1、下载谋集
-    2、下载全部
-    3、收藏书籍
-    4、返回书城
-    5、返回主页
-    6、退出"""
+    2、连续下载
+    3、下载全部
+    4、收藏书籍
+    5、返回书城
+    6、返回主页
+    7、退出"""
 
     while True:
-        select = showMenu(menu, range(1, 7))
+        select = showMenu(menu, range(1, 8))
         if select == 1:
-            chapters = input("请选择集数(多集请用逗号分隔)：")
+            chapters = input("请选择集数(多集请用逗号分隔[如1,2,3])：")
             try:
                 chapters = chapters.split(",")
                 chaptersID = []
@@ -169,6 +175,30 @@ def mp3BookDetail(bookInfoDict: dict):
                 print("输入错误!!!集数应该是数字，多集间用英文逗号隔开。")
                 input("输入任意继续...")
         elif select == 2:
+            chapters = input("请选择集数(多集请用-分隔[如1-100])：")
+            try:
+                start, end = chapters.strip().split("-")
+                start, end = int(start), int(end)
+
+                if not os.path.exists(path):
+                    print("创建文件夹：", path)
+                    os.makedirs(path)
+                for chapterID in range(start, end + 1):
+                    if 1 <= chapterID <= chapterNum:
+                        print("开始下载第%d集..." % chapterID)
+                        data = downloadMp3Novel(novelDetail["chapterList"][chapterID - 1]["url"])
+                        with open(path + "/" + novelDetail["chapterList"][chapterID - 1]["title"] + ".mp3", "wb") as f:
+                            f.write(data)
+                        print("下载第%d集完成..." % chapterID)
+                    else:
+                        print("集数 %d 错误" % chapterID)
+                print("下载完成")
+                input("输入任意继续...")
+            except Exception as e:
+                print(e)
+                print("输入错误!!!集数应该是数字，多集间用-隔开。")
+                input("输入任意继续...")
+        elif select == 3:
             if not os.path.exists(path):
                 os.makedirs(path)
             for i, chapter in enumerate(novelDetail["chapterList"]):
@@ -177,12 +207,12 @@ def mp3BookDetail(bookInfoDict: dict):
                 with open(path + "/" + chapter["title"] + ".mp3", "wb") as f:
                     f.write(data)
                 print("下载第%d集完成..." % (i + 1))
-        elif select == 3:
+        elif select == 4:
             print("收藏成功...")
             input("输入任意继续...")
-        elif select == 4:
-            return 0
         elif select == 5:
+            return 0
+        elif select == 6:
             return 1
         else:
             return 2
