@@ -10,6 +10,8 @@ import os
 from BookInfo.mp4Book import searchNovel, getNovelChapterList, downloadMp3Novel
 
 
+root = "../INovel"
+
 def showMenu(menu, selectRange):
     tip = str(selectRange.start) + "-" + str(selectRange.stop - 1)
 
@@ -33,7 +35,8 @@ def showMenu(menu, selectRange):
 
 
 def mp3BookDetail(bookInfoDict: dict):
-    path = "test/mp3/" + bookInfoDict["novelTitle"]
+    path = os.path.join(root, "mp3", bookInfoDict["novelTitle"])
+    print("下载路径：", path)
     menu = """%s--%s""" % (bookInfoDict["novelTitle"], bookInfoDict["novelAuthor"])
 
     url = "https://m.tingshubao.com/book/%s.html" % str(bookInfoDict["novelID"])
