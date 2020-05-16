@@ -90,12 +90,21 @@ def downloadMp3Novel(url):
     mp3Url = response.json()['url']
     response = requests.get(mp3Url, headers=header)
 
-
     return response.content
 
 
 if __name__ == '__main__':
-    # print(searchNovel("牧神记"))
+    print(searchNovel("牧神记"))
+    response = requests.get("https://www.tingshubao.com/pic/uploadimg/2019-9/201991717492928723.jpg")
+
+    with open("cover.jpg", "wb") as f:
+        f.write(response.content)
+
     #     print(e)
-    downloadMp3Novel("https://m.tingshubao.com//video/?2940-0-0.html")
+    # import struct
+    #
+    # data = downloadMp3Novel("https://m.tingshubao.com//video/?2940-0-0.html")
+    #
+    # with open("test.mp3", 'wb') as f:
+    #     f.write(data)
     # print(getNovelChapterList("https://m.tingshubao.com/book/81.html"))

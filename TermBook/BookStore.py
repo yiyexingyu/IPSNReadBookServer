@@ -14,6 +14,36 @@ import re
 from lxml import etree
 from json.decoder import JSONDecodeError
 
+from mutagen.id3 import ID3, APIC, TIT2, TPE1, TALB, ID3NoHeaderError
+
+
+def SetMap3Info(id3Data: ID3, infoDict: dict):
+    for key in infoDict.keys():
+        if key == "APIC":
+            id3Data[key] = APIC(
+                encoding=3,
+                mime='image/jpeg',
+                type=3,
+                desc=u'封面',
+                data=infoDict[key]
+            )
+        elif key == 'TIT2':
+            id3Data[key] = TIT2(
+                encoding=3,
+                text=infoDict[key]
+            )
+        elif key == "TPE1":
+            id3Data[key] = TPE1(
+                encoding=3,
+                text=infoDict[key]
+            )
+        elif key == "TALB":
+            id3Data[key] = TALB(
+                encoding=3,
+                text=infoDict[key]
+            )
+    return id3Data
+
 
 def searchNovel(novelInfo):
     novelInfo = str(novelInfo.encode("gb2312")).replace("\\", "|").split("'")[1].replace("|x", "%")
@@ -128,12 +158,29 @@ def showMenu(menu, selectRange):
 
 
 def mp3BookDetail(bookInfoDict: dict):
+    def saveMp3(data, path, cover, title, author, novel):
+        try:
+            id3Data = ID3(data)
+            id3Data.filename = path
+            SetMap3Info(id3Data, {
+                "APIC": cover,
+                "TIT2": title,
+                "TPE1": author,
+                "TALB": novel
+            })
+            return True
+        except ID3NoHeaderError as e:
+            print(e)
+            print("下载失败！！")
+            return False
+
     path = os.path.join(root, "mp3", bookInfoDict["novelTitle"])
     menu = """%s--%s""" % (bookInfoDict["novelTitle"], bookInfoDict["novelAuthor"])
 
     url = "https://m.tingshubao.com/book/%s.html" % str(bookInfoDict["novelID"])
-    novelDetail = getNovelChapterList(url)
+    coverData = requests.get(bookInfoDict["novelCover"]).content
 
+    novelDetail = getNovelChapterList(url)
     chapterNum = len(novelDetail["chapterList"])
     menu += ("\n" + "共有%d集(1-%d)" % (chapterNum, chapterNum))
     menu += """
@@ -163,14 +210,15 @@ def mp3BookDetail(bookInfoDict: dict):
                     if 1<= chapterID <= chapterNum:
                         print("开始下载第%d集..." % chapterID)
                         data = downloadMp3Novel(novelDetail["chapterList"][chapterID-1]["url"])
-                        with open(path + "/" + novelDetail["chapterList"][chapterID-1]["title"] + ".mp3", "wb") as f:
-                            f.write(data)
-                        print("下载第%d集完成..." % chapterID)
+                        if saveMp3(data, path + "/" + novelDetail["chapterList"][chapterID-1]["title"] + ".mp3",
+                                coverData, novelDetail["chapterList"][chapterID-1]["title"],
+                                bookInfoDict["novelAuthor"], bookInfoDict["novelTitle"]):
+                            print("下载第%d集完成..." % chapterID)
                     else:
                         print("集数 %d 错误" % chapterID)
                 print("下载完成")
                 input("输入任意继续...")
-            except Exception as e:
+            except ValueError as e:
                 print(e)
                 print("输入错误!!!集数应该是数字，多集间用英文逗号隔开。")
                 input("输入任意继续...")
@@ -187,9 +235,10 @@ def mp3BookDetail(bookInfoDict: dict):
                     if 1 <= chapterID <= chapterNum:
                         print("开始下载第%d集..." % chapterID)
                         data = downloadMp3Novel(novelDetail["chapterList"][chapterID - 1]["url"])
-                        with open(path + "/" + novelDetail["chapterList"][chapterID - 1]["title"] + ".mp3", "wb") as f:
-                            f.write(data)
-                        print("下载第%d集完成..." % chapterID)
+                        if saveMp3(data, path + "/" + novelDetail["chapterList"][chapterID - 1]["title"] + ".mp3",
+                                   coverData, novelDetail["chapterList"][chapterID - 1]["title"],
+                                   bookInfoDict["novelAuthor"], bookInfoDict["novelTitle"]):
+                            print("下载第%d集完成..." % chapterID)
                     else:
                         print("集数 %d 错误" % chapterID)
                 print("下载完成")
@@ -204,9 +253,11 @@ def mp3BookDetail(bookInfoDict: dict):
             for i, chapter in enumerate(novelDetail["chapterList"]):
                 print("正在下载第%d集..." % (i + 1))
                 data = downloadMp3Novel(chapter["url"])
-                with open(path + "/" + chapter["title"] + ".mp3", "wb") as f:
-                    f.write(data)
-                print("下载第%d集完成..." % (i + 1))
+                if saveMp3(data, path + "/" + chapter["title"] + ".mp3",
+                           coverData, chapter["title"],
+                           bookInfoDict["novelAuthor"],
+                           bookInfoDict["novelTitle"]):
+                    print("下载第%d集完成..." % (i + 1))
         elif select == 4:
             print("收藏成功...")
             input("输入任意继续...")
@@ -216,7 +267,6 @@ def mp3BookDetail(bookInfoDict: dict):
             return 1
         else:
             return 2
-
 
 
 def bookSearchRes(novelList: list):
@@ -300,5 +350,15 @@ def fileTest():
 
 if __name__ == '__main__':
     # run()
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    print(BASE_DIR)
+    file = "../BookInfo/test.mp3"
+    data = open(file, "rb")
+
+    imgData = open("cover.jpg", "rb").read()
+    id3Data = ID3(data)
+
+    SetMap3Info(id3Data, {
+        "APIC": imgData,
+        "TIT2": "第6集",
+        "TPE1": "宅朱",
+        "TALB": "牧神记"
+    })
