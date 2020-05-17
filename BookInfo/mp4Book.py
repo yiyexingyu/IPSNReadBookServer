@@ -5,9 +5,11 @@
 # @Email   : h0670131005@gmail.com
 # @Software: PyCharm
 
+import time
 import requests
 import re
 from lxml import etree
+from json.decoder import JSONDecodeError
 
 
 def searchNovel(novelInfo):
@@ -55,11 +57,16 @@ def getNovelChapterList(novelUrl):
 
     print("正在获取章节列表....")
     chapterList = []
-    urlDomain = "https://m.tingshubao.com/"
+    urlDomain = "m.tingshubao.com/"
     chapterHtmlList = html.xpath("//*[@id='playlist']/ul/li")
+
     for chapter in chapterHtmlList:
+        tUrl = urlDomain + chapter.xpath("./a/@href")[0]
+        url = "https:/"
+        for v in tUrl.split("/"):
+            if v: url += ("/" + v)
         chapterList.append({
-            "url": urlDomain + chapter.xpath("./a/@href")[0],
+            "url": url,
             "title": chapter.xpath("./a/text()")[0]
         })
     result["chapterList"] = chapterList
@@ -70,41 +77,38 @@ def downloadMp3Novel(url):
     response = requests.get(url)
     response.encoding = "gb2312"
     html = response.text
-
-    novelInfos = re.findall("<script>var datas=(.*?)}</script>", html)[0].split(";")
-    title = novelInfos[2].split("'")[-2].strip()
-    oriCode = re.findall("datas=\(FonHen_JieMa\((.*?)\).split", html)[0].strip("'").split("*")[1:]
-    data = "".join(chr(int(code)) for code in oriCode).split("&")
-
-    urlData = data[0].split("/")
-    url = (urlData[0] + '/' + urlData[1] + '/play_' + urlData[1] + '_' + urlData[2] + '.htm').strip()
-
-    novelUrl = "https://m.tingshubao.com/player/tingchina.php?url=" + url
     header = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36"
     }
 
-    response = requests.get(novelUrl, headers=header)
-    response.encoding = "gb2312"
+    oriCode = re.findall("datas=\(FonHen_JieMa\((.*?)\).split", html)[0].strip("'").split("*")[1:]
+    data = "".join(chr(int(code)) for code in oriCode).split("&")
 
-    mp3Url = response.json()['url']
+    if data[2] == "tc":
+        urlData = data[0].split("/")
+        url = (urlData[0] + '/' + urlData[1] + '/play_' + urlData[1] + '_' + urlData[2] + '.htm').strip()
+        novelUrl = "https://m.tingshubao.com/player/tingchina.php?url=" + url
+
+        response = requests.get(novelUrl, headers=header)
+        response.encoding = "gb2312"
+
+        while True:
+            try:
+                mp3Url = response.json()['url']
+                break
+            except JSONDecodeError:
+                print("获取音频出现错误: ", novelUrl)
+                print(response.text)
+                time.sleep(2)
+    else:
+        mp3Url = data[0]
+
     response = requests.get(mp3Url, headers=header)
-
     return response.content
 
 
 if __name__ == '__main__':
     print(searchNovel("牧神记"))
     response = requests.get("https://www.tingshubao.com/pic/uploadimg/2019-9/201991717492928723.jpg")
+    data = downloadMp3Novel("https://m.tingshubao.com/video/?2940-0-493.html")
 
-    with open("cover.jpg", "wb") as f:
-        f.write(response.content)
-
-    #     print(e)
-    # import struct
-    #
-    # data = downloadMp3Novel("https://m.tingshubao.com//video/?2940-0-0.html")
-    #
-    # with open("test.mp3", 'wb') as f:
-    #     f.write(data)
-    # print(getNovelChapterList("https://m.tingshubao.com/book/81.html"))

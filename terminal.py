@@ -13,8 +13,9 @@ os.chdir(BASE_DIR)
 sys.path.append(BASE_DIR)
 sys.path.insert(0, os.path.join(BASE_DIR, "BookInfo"))
 
-from TermBook.BookStore import run
+from TermBook.BookStore import INovel
 
 
 if __name__ == '__main__':
-    run()
+    novel = INovel()
+    novel.run()
