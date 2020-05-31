@@ -16,8 +16,10 @@ from lxml import etree
 import json
 from json.decoder import JSONDecodeError
 
-from  progress.bar import IncrementalBar
+from eprogress import LineProgress, MultiProgressManager
 from mutagen.id3 import ID3, APIC, TIT2, TPE1, TALB, ID3NoHeaderError
+
+mp = MultiProgressManager()
 
 
 def SetMap3Info(id3Data: ID3, infoDict: dict):
@@ -70,7 +72,7 @@ def searchMp3Novel(novelInfo):
     for index, novelHtmlInfo in enumerate(novelList):  # type: etree._Element
         novelInfoList.append({
             "novelID": int(novelHtmlInfo.xpath("./a/@href")[0].split("/")[-1].split(".")[0]),
-            "novelCover": "https:" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
+            "novelCover": "https://m.tingshubao.com" + novelHtmlInfo.xpath("./a/img/@data-original")[0],
             "novelTitle": novelHtmlInfo.xpath("./a/div/h4/text()")[0],
             "novelDesc": novelHtmlInfo.xpath("./a/div/p/text()")[0],
             "novelAuthor": novelHtmlInfo.xpath("./a/div/div[@class='book-meta']/text()")[0],
@@ -171,7 +173,7 @@ def downloadMp3Novel(url):
     return musicType, response.content
 
 
-def downloadTxtNovel(url):
+def downloadTxtNovel(url, curChaptersNum=0):
     response = requests.get(url)
     response.encoding = "utf-8"
 
@@ -179,10 +181,10 @@ def downloadTxtNovel(url):
     coverUrl = html.xpath("//*[@id='fmimg']/img/@src")[0]
 
     chaptersHtml = html.xpath("//*[@id='list']/dl/dd")
-    data = """%s\n\n""" % url
+    data = """\n"""
 
-    bar = IncrementalBar(html.xpath("//*[@id='info']/h1/text()")[0], max=len(chaptersHtml), suffix="%(percent)d%%")
-    for chapter in chaptersHtml:
+    for index in range(curChaptersNum, len(chaptersHtml)):
+        chapter = chaptersHtml[index]
         title = chapter.xpath("./a/text()")[0].split("【")[0].split("(")[0]
         data += ("\n\n" + title + "\n\n")
         response = requests.get("http://www.xbiquge.la/" + chapter.xpath("./a/@href")[0])
@@ -190,9 +192,8 @@ def downloadTxtNovel(url):
 
         chapterHtml = etree.HTML(response.text)
         data += "".join(chapterHtml.xpath("//*[@id='content']/text()")).replace("\xa0", " ").replace("\r", "\n")
-        bar.next()
-    bar.finish()
-    return coverUrl, data
+
+    return coverUrl, len(chaptersHtml), data
 
 
 class INovel():
@@ -200,36 +201,23 @@ class INovel():
     def __init__(self):
         self.root = "../../INovel"
         self.bookshelfData = {}
-        self.bookshelfFile = None
+        self.bookshelfPath = os.path.join(self.root, "bookshelf.txt")
         self.__loadBookshelData()
 
     def __loadBookshelData(self):
-        path = os.path.join(self.root, "bookshelf.txt")
-        if not os.path.exists(path):
-            f = open(path, "w")
-        self.bookshelfFile = open(path, "r+")
+
+        with open(self.bookshelfPath, mode='a', encoding="gbk") as f:
+            print(f)
 
         try:
-            self.bookshelfData = json.load(self.bookshelfFile)
+            with open(self.bookshelfPath, mode='r') as file:
+                self.bookshelfData = json.load(file)
         except JSONDecodeError:
-            pass
-        # else:
-        #     self.bookshelfFile = open(path, "w+")
-        #     mp3Path = os.path.join(self.root, "mp3")
-        #     for dir in os.listdir(mp3Path):
-        #         curDir = os.path.join(mp3Path, dir)
-        #         if os.path.isdir(dir):
-        #             info = {"novelName": dir, "novelType": "mp3", "url": ""}
-        #             downloaded = []
-        #             for mp3 in os.listdir(curDir):
-        #                 if os.path.isfile(curDir) and dir.endswith(".mp3"):
-        #                     downloaded.append(int(mp3.split(".")[0][1:-1]))
-        #             if downloaded:
-        #                 info["downloaded"] = downloaded
-        #                 self.bookshelfData[dir] = info
+            print("打开小说信息文件失败....")
 
     def __saveBookshelData(self):
-        json.dump(self.bookshelfData, self.bookshelfFile)
+        with open(self.bookshelfPath, "w") as file:
+            json.dump(self.bookshelfData, file)
 
     def bookSearchRes(self, mp3NovelList: list, txtNovelList: list):
         menu = """搜索结果:"""
@@ -264,22 +252,21 @@ class INovel():
          3、返回主页
          4、退出"""
 
+        flag = bookInfoDict["novelTitle"] in self.bookshelfData
         while True:
             select = INovel.showMenu(menu, range(1, 5))
             if select == 1:
-                _, data = downloadTxtNovel(bookInfoDict["novelUrl"])
-                with open(path, "w", encoding="utf-8") as f:
-                    try:
-                        f.write(data)
-                    except UnicodeEncodeError as e:
-                        print(e.__str__())
+                if flag:
+                    curChaptersNum = self.bookshelfData[bookInfoDict["novelTitle"]]["curChaptersNum"]
+                else:
+                    curChaptersNum = 0
+                self.saveTxtNovel(path, bookInfoDict["novelUrl"], curChaptersNum, bookInfoDict["novelTitle"], flag)
             elif select == 2:
                     return 0
             elif select == 3:
                 return 1
             else:
                 return 2
-
 
     def mp3BookDetail(self, bookInfoDict: dict):
         def saveMp3(data, path, cover, title, author, novel):
@@ -432,6 +419,35 @@ class INovel():
         1、返回主页"""
         select = INovel.showMenu(self.bookshelf(), range(1, 2))
 
+    def saveTxtNovel(self, path, url, curChaptersNum, title, flag=True):
+        _, curChaptersNum, data = downloadTxtNovel(url, curChaptersNum)
+        with open(path, "a", encoding="utf-8") as f:
+            try:
+                f.write(data)
+                if flag:
+                    self.bookshelfData[title]["curChaptersNum"] = curChaptersNum
+                else:
+                    self.bookshelfData[title] = {
+                        'type': "txt",
+                        'url': url,
+                        'curChaptersNum': curChaptersNum,
+                        'path': path
+                    }
+                self.__saveBookshelData()
+            except UnicodeEncodeError as e:
+                print(e.__str__())
+
+
+    def updateTxtNovel(self):
+        for title in self.bookshelfData.keys():
+            if self.bookshelfData[title]["type"] == 'txt':
+                url = self.bookshelfData[title]['url']
+                curChaptersNum = self.bookshelfData[title]['curChaptersNum']
+                path = self.bookshelfData[title]['path']
+                self.saveTxtNovel(path, url, curChaptersNum, title, True)
+                print(title, "-更新", self.bookshelfData[title]['curChaptersNum'] - curChaptersNum,"章")
+
+
     def setting(self):
         print("此功能还未开发，敬请期待！")
         input("回车继续...")
@@ -452,7 +468,7 @@ class INovel():
             elif select == 3:
                 self.setting()
             elif select == 4:
-                pass
+                self.updateTxtNovel()
             else:
                 print("感谢使用i阅读！！")
                 break
@@ -488,13 +504,6 @@ def fileTest():
 
 
 if __name__ == '__main__':
+
     novel = INovel()
     novel.run()
-    # r = searchTxtNovel("三界劳改局")
-    # downloadTxtNovel(r["novelList"][0]["novelUrl"])
-    # data = downloadMp3Novel("https://m.tingshubao.com/video/?2950-0-0.html")
-    # print(data[:10])
-    #
-    # data = str(data)
-    # with open("test.txt", "w") as f:
-    #     f.write(data)
