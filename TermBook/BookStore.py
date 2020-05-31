@@ -11,6 +11,7 @@ import time
 
 import requests
 import re
+from threading import Thread
 from lxml import etree
 
 import json
@@ -18,8 +19,6 @@ from json.decoder import JSONDecodeError
 
 from eprogress import LineProgress, MultiProgressManager
 from mutagen.id3 import ID3, APIC, TIT2, TPE1, TALB, ID3NoHeaderError
-
-mp = MultiProgressManager()
 
 
 def SetMap3Info(id3Data: ID3, infoDict: dict):
@@ -180,9 +179,12 @@ def downloadTxtNovel(url, curChaptersNum=0):
     html = etree.HTML(response.text)
     coverUrl = html.xpath("//*[@id='fmimg']/img/@src")[0]
 
+    title = html.xpath("//*[@id='info']/h1/text()")[0]
     chaptersHtml = html.xpath("//*[@id='list']/dl/dd")
     data = """\n"""
 
+    progress = LineProgress(total=100, title=title)
+    total = len(chaptersHtml) - curChaptersNum
     for index in range(curChaptersNum, len(chaptersHtml)):
         chapter = chaptersHtml[index]
         title = chapter.xpath("./a/text()")[0].split("【")[0].split("(")[0]
@@ -192,7 +194,7 @@ def downloadTxtNovel(url, curChaptersNum=0):
 
         chapterHtml = etree.HTML(response.text)
         data += "".join(chapterHtml.xpath("//*[@id='content']/text()")).replace("\xa0", " ").replace("\r", "\n")
-
+        progress.update(int((index - curChaptersNum + 1) / total * 100))
     return coverUrl, len(chaptersHtml), data
 
 
